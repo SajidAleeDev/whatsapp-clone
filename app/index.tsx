@@ -40,11 +40,24 @@ export default function Index() {
     }
     if (!isLoaded) return;
     setLoading(true);
+    try {
+      const SetupComplete = await signIn.create({
+        identifier: email,
+        password,
+      });
+      await setActive({
+        session: SetupComplete.createdSessionId,
+      });
+    } catch (error) {
+      //@ts-ignore
+      Alert.alert("Error", error.errors[0].message);
+      console.log(error);
+    }
   };
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={70}
+      // keyboardVerticalOffset={70}
       style={{
         flex: 1,
         backgroundColor: Colors.primary,
@@ -68,7 +81,7 @@ export default function Index() {
       </View>
       <View
         style={{
-          height: "65%",
+          flex: 1,
           backgroundColor: Colors.white,
           borderTopLeftRadius: 40,
           borderTopRightRadius: 40,

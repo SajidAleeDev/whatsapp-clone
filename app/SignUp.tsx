@@ -40,6 +40,27 @@ export default function SignUp() {
     }
     if (!isLoaded) return;
     setLoading(true);
+    try {
+      await signUp.create({
+        emailAddress: email,
+        password,
+      });
+      await signUp.prepareEmailAddressVerification({
+        strategy: "email_code",
+      });
+
+      //@ts-ignore
+      await router.push({
+        pathname: "/Otp",
+        params: { email },
+      });
+    } catch (error) {
+      //@ts-ignore
+      Alert.alert("Error", error.errors[0].message);
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <KeyboardAvoidingView
@@ -148,35 +169,33 @@ export default function SignUp() {
             secureTextEntry
           />
         </View>
-        <Link
+        {/* <Link
           href={{
             pathname: "/Otp",
             params: { email },
           }}
           asChild
+        > */}
+        <Pressable
+          onPress={handleSignUp}
+          style={{
+            backgroundColor: Colors.primary,
+            borderRadius: 15,
+            padding: 15,
+            marginTop: 20,
+          }}
         >
-          <Pressable
-            onPress={() => {
-              router.navigate("Otp");
-            }}
+          <Text
             style={{
-              backgroundColor: Colors.primary,
-              borderRadius: 15,
-              padding: 15,
-              marginTop: 20,
+              color: Colors.white,
+              textAlign: "center",
+              fontWeight: "bold",
             }}
           >
-            <Text
-              style={{
-                color: Colors.white,
-                textAlign: "center",
-                fontWeight: "bold",
-              }}
-            >
-              Sign Up
-            </Text>
-          </Pressable>
-        </Link>
+            Sign Up
+          </Text>
+        </Pressable>
+        {/* </Link> */}
       </View>
     </KeyboardAvoidingView>
   );

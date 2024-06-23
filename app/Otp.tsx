@@ -1,25 +1,50 @@
 import Colors from "@/constants/Colors";
 import { defaultStyles } from "@/constants/defultStyles";
+import { useSignUp } from "@clerk/clerk-expo";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   Text,
   View,
 } from "react-native";
+import OptView from "react-native-otp-textinput";
 
 export default function Otp() {
   const { email } = useLocalSearchParams<{ email: string }>();
-  console.log(email, "email");
-
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { signUp, isLoaded, setActive } = useSignUp();
   const [otp, setOtp] = useState("");
 
-  console.log(otp, "otp");
+  const handleVerify = async () => {
+    if (!otp) {
+      Alert.alert("Error", "Please fill all fields", [{ text: "OK" }]);
+      return;
+    }
+    if (!isLoaded) return;
+    setLoading(true);
+    try {
+      const SetupComplete = await signUp.attemptEmailAddressVerification({
+        code: otp,
+      });
+      await setActive({
+        session: SetupComplete.createdSessionId,
+      });
+    } catch (error) {
+      //@ts-ignore
+      Alert.alert("Error", error.errors[0].message);
+
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -78,15 +103,63 @@ export default function Otp() {
             >
               {email}
             </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginTop: 40,
-              }}
-            ></View>
           </Text>
         </View>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginTop: 40,
+          }}
+        >
+          <OptView
+            inputCount={6}
+            autoFocus={true}
+            keyboardType="number-pad"
+            handleTextChange={(text) => {
+              setOtp(text);
+            }}
+            containerStyle={{
+              justifyContent: "space-between",
+              width: "100%",
+            }}
+            textInputStyle={{
+              width: 40,
+              height: 40,
+              borderColor: Colors.grey,
+            }}
+            inputCellLength={1}
+            offTintColor={Colors.grey}
+            tintColor={Colors.secondary}
+            handleCellTextChange={(text, index) => {
+              console.log(text, index, "text, index");
+            }}
+          />
+        </View>
+        <View
+          style={{
+            flex: 1,
+          }}
+        />
+        <Pressable
+          onPress={handleVerify}
+          style={{
+            backgroundColor: Colors.primary,
+            borderRadius: 15,
+            padding: 15,
+            marginTop: 20,
+          }}
+        >
+          <Text
+            style={{
+              color: Colors.white,
+              textAlign: "center",
+              fontWeight: "bold",
+            }}
+          >
+            Verify
+          </Text>
+        </Pressable>
       </View>
     </KeyboardAvoidingView>
   );
